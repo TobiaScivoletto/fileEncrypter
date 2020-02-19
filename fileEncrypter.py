@@ -1,7 +1,7 @@
 from cryptography.fernet import Fernet
 import os
 
-class cryptoClass(Fernet):
+class fileEncrypter(Fernet):
     def __init__(self):
         self.encryptedFileExtension = ".crypt"
         self.bufferDim = 1024     #dim in byte del buffer per cifrare
@@ -120,10 +120,10 @@ class cryptoClass(Fernet):
 
 
 if(__name__ == "__main__"):
-    myClass = cryptoClass()
+    myClass = fileEncrypter()
     key = myClass.generate_key()
 
-    myClass.fileEncrypt("prova.jpg", key)
-    input("press ENTER")
-    myClass.fileDecrypt("prova.jpg.crypt", key)
+    myClass.fileEncrypt("file.jpg", key)
+    input("press ENTER to decrypt")
+    myClass.fileDecrypt("file.jpg.crypt", key)
     
