@@ -4,8 +4,9 @@ import os
 class fileEncrypter(Fernet):
     def __init__(self):
         self.encryptedFileExtension = ".crypt"
-        self.bufferDim = 1024     #dim in byte del buffer per cifrare
-        self.bufferDimEncrypted = 1464  #dim in byte del buffer dopo che bufferDim è stato criptato
+        #1048576 byte = 1 megabyte
+        self.bufferDim = 1048576     #dim in byte del buffer per cifrare
+        self.bufferDimEncrypted = 1398200  #dim in byte del buffer dopo che bufferDim è stato criptato
 
 
     def generateKeyInFile(self, keyFileName):
@@ -118,12 +119,25 @@ class fileEncrypter(Fernet):
             print("File o cartella non trovate")
 
 
+    def findEncrypterBufferLen(self, bufferDim):
+        #criptiamo un'array di self.bufferDim
+        #verifichiamo la lunghezza dopo averlo cifrato
+        #verichiamo che questa sia costante
+
+        key = Fernet.generate_key()
+        f = Fernet(key)
+        casualByte = os.urandom(bufferDim)
+        encryptedByte = f.encrypt(casualByte)
+        return len(encryptedByte)
+
 
 if(__name__ == "__main__"):
     myClass = fileEncrypter()
-    key = myClass.generate_key()
 
-    myClass.fileEncrypt("file.jpg", key)
-    input("press ENTER to decrypt")
-    myClass.fileDecrypt("file.jpg.crypt", key)
+    #print(myClass.findEncrypterBufferLen(1048576))
+
+    key = myClass.generate_key()
+    myClass.fileEncrypt("prova.jpg", key)
+    input("press ENTER")
+    myClass.fileDecrypt("prova.jpg.crypt", key)
     
