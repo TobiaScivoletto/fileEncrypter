@@ -199,6 +199,3 @@ if(__name__ == "__main__"):
 
     input("PRESS ENTER TO EXIT")
     exit()
-
-    #cryptography.fernet.InvalidToken
-    #print(myClass.findEncrypterBufferLen(1048576))
