@@ -1,5 +1,9 @@
 from cryptography.fernet import Fernet
+import cryptography
 import os
+import threading
+import base64
+import hashlib
 
 class fileEncrypter(Fernet):
     def __init__(self):
@@ -62,7 +66,11 @@ class fileEncrypter(Fernet):
             while(True):
                 buffer = encryptedFile.read(self.bufferDimEncrypted)
                 if(len(buffer) > 0):
-                    decryptedData = f.decrypt(buffer)
+                    try:
+                        decryptedData = f.decrypt(buffer)
+                    except cryptography.fernet.InvalidToken:
+                        return -1
+
                     originalFile.write(decryptedData)
                 else:
                     break
@@ -81,6 +89,7 @@ class fileEncrypter(Fernet):
         #criptiamo tutti i file presenti nella cartella selezionata e nelle sottocartelle
         try:
             listDir = os.listdir(directory)
+            threadList = []
             print("Lista elementi presenti in " + str(directory) + ": " + str(listDir))
             for element in listDir:
                 element = directory + element
@@ -90,8 +99,15 @@ class fileEncrypter(Fernet):
                     self.cryptoDir(element + "/", key)
                 if(os.path.isfile(element)):
                     #qui inseriamo la funzione per criptare il file
-                    self.fileEncrypt(element, key)
                     print("Cripto il file " + element)
+                    tempThread = threading.Thread(target=self.fileEncrypt, args=(element, key))
+                    tempThread.start()
+                    threadList.append(tempThread)
+                    #self.fileEncrypt(element, key)
+
+            for thread in threadList:
+                thread.join()
+                
         except PermissionError:
             print("Permesso negato")
         except FileNotFoundError:
@@ -102,6 +118,7 @@ class fileEncrypter(Fernet):
         #decriptiamo tutti i file presenti nella cartella selezionata e nelle sottocartelle
         try:
             listDir = os.listdir(directory)
+            threadList = []
             print("Lista elementi presenti in " + str(directory) + ": " + str(listDir))
             for element in listDir:
                 element = directory + element
@@ -111,8 +128,15 @@ class fileEncrypter(Fernet):
                     self.decryptoDir(element + "/", key)
                 if(os.path.isfile(element)):
                     #qui inseriamo la funzione per criptare il file
-                    self.fileDecrypt(element, key)
                     print("Decripto il file " + element)
+                    tempThread = threading.Thread(target=self.fileDecrypt, args=(element, key))
+                    tempThread.start()
+                    threadList.append(tempThread)
+                    # self.fileDecrypt(element, key)
+
+            for thread in threadList:
+                thread.join()
+
         except PermissionError:
             print("Accesso negato")
         except FileNotFoundError:
@@ -120,7 +144,7 @@ class fileEncrypter(Fernet):
 
 
     def findEncrypterBufferLen(self, bufferDim):
-        #criptiamo un'array di self.bufferDim
+        #criptiamo un'array di dimensione bufferDim
         #verifichiamo la lunghezza dopo averlo cifrato
         #verichiamo che questa sia costante
 
@@ -131,13 +155,50 @@ class fileEncrypter(Fernet):
         return len(encryptedByte)
 
 
+    def generate_key_from_password(self, password):
+        #la chiave di 256 bit viene generata a partire dalla password
+        #effettuando l'hash a 256 bit della password
+        #poi si codifica in base64
+        #pseudocodifica: base64(sha256(password))
+
+        sha = hashlib.sha256()
+        sha.update(password.encode())
+        password_sha = sha.digest()
+        key = base64.b64encode(password_sha)
+        return key
+
+
 if(__name__ == "__main__"):
-    myClass = fileEncrypter()
+    print("--- fileEncrypter ---")
+    print("1) Crypt file")
+    print("2) Decrypt file")
+    print("3) Exit")
+    menu = int(input(">>> "))
 
+    print("\n\n")
+    if(menu == 1):
+        myClass = fileEncrypter()
+        file_name = input("name of the file: ")
+        password = input("password: ")
+        myClass.fileEncrypt(file_name, myClass.generate_key_from_password(password))
+
+    elif(menu == 2):
+        myClass = fileEncrypter()
+        file_name = input("name of the file: ")
+        password = input("password: ")
+        decrypt_result = myClass.fileDecrypt(file_name, myClass.generate_key_from_password(password))
+        if(decrypt_result == True):
+            print("file decrypted")
+        elif(decrypt_result == -1):
+            print("wrong password")
+        elif(decrypt_result == False):
+            print("file not crypted")
+
+    elif(menu == 3):
+        exit()
+
+    input("PRESS ENTER TO EXIT")
+    exit()
+
+    #cryptography.fernet.InvalidToken
     #print(myClass.findEncrypterBufferLen(1048576))
-
-    key = myClass.generate_key()
-    myClass.fileEncrypt("prova.jpg", key)
-    input("press ENTER")
-    myClass.fileDecrypt("prova.jpg.crypt", key)
-    
