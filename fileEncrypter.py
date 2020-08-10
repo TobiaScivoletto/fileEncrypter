@@ -172,15 +172,19 @@ if(__name__ == "__main__"):
     print("--- fileEncrypter ---")
     print("1) Crypt file")
     print("2) Decrypt file")
-    print("3) Exit")
+    print("3) Crypt string")
+    print("4) Decrypt string")
+    print("5) Exit")
     menu = int(input(">>> "))
-
     print("\n\n")
+
+
     if(menu == 1):
         myClass = fileEncrypter()
         file_name = input("name of the file: ")
         password = input("password: ")
         myClass.fileEncrypt(file_name, myClass.generate_key_from_password(password))
+
 
     elif(menu == 2):
         myClass = fileEncrypter()
@@ -194,8 +198,31 @@ if(__name__ == "__main__"):
         elif(decrypt_result == False):
             print("file not crypted")
 
+
     elif(menu == 3):
+        myClass = fileEncrypter()
+        string = input("string: ")
+        password = input("password: ")
+        key = myClass.generate_key_from_password(password)
+        f = Fernet(key)
+        print("encrypted string: " + str(f.encrypt(string.encode())))
+
+
+    elif(menu == 4):
+        myClass = fileEncrypter()
+        string = input("string: ")
+        password = input("password: ")
+        key = myClass.generate_key_from_password(password)
+        f = Fernet(key)
+        print("decrypted string: " + str(f.decrypt(string.encode())))
+
+
+    elif(menu == 5):
         exit()
+
 
     input("PRESS ENTER TO EXIT")
     exit()
+
+    #cryptography.fernet.InvalidToken
+    #print(myClass.findEncrypterBufferLen(1048576))
